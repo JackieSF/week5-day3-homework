@@ -1,79 +1,111 @@
--- INNER JOIN on the Actor and Film_Actor Tables
-SELECT actor.actor_id, first_name, last_name, COUNT(film_id)
-FROM actor
-INNER JOIN film_actor
-ON actor.actor_id = film_actor.actor_id
-GROUP BY actor.actor_id
-ORDER BY actor.actor_id DESC;
+-- 1. List all customers who live in Texas (use JOINs)
+SELECT *
+FROM customer;
 
--- LEFT JOIN on Customer and Payment tables
-SELECT first_name, last_name, email,rental_id, amount, payment_date
+SELECT * 
+FROM address;
+
+SELECT customer_id, first_name, last_name
 FROM customer
-LEFT JOIN payment
-ON customer.customer_id = payment.customer_id;
+JOIN address ON customer.address_id = address.address_id
+WHERE customer.address_id = 'Texas';
 
--- Finding Customers that have a country of 'Angola'
+-- 2. Get all payments above $6.99 with the Customer's Full Name
 SELECT *
-FROM country;
+FROM customer;
 
-SELECT *
-FROM city
-ORDER BY country_id ASC;
+SELECT * 
+FROM payment;
 
-SELECT *
-FROM address
-WHERE city_id = 67;
-
-SELECT *
+SELECT first_name, last_name, amount
 FROM customer
-WHERE address_id = 534;
+JOIN payment ON customer.customer_id = payment.customer_id
+WHERE amount > 6.99;
 
--- Full Join that will produce info about a customer
--- From the country of Angola
-SELECT customer.first_name, customer.last_name, customer.email, country
-FROM customer
-FULL JOIN address
-ON customer.address_id = address.address_id
-FULL JOIN city
-ON address.city_id = city.city_id
-FULL JOIN country
-ON city.country_id = country.country_id
-WHERE country = 'Angola';
-
-
--- RIGHT JOIN to find the amount of staff members we have
-SELECT COUNT(staff_id), store.store_id
-FROM staff
-LEFT JOIN store
-ON staff.store_id = store.store_id
-GROUP BY store.store_id;
-
-SELECT title, description, rating, store_id, rental_date
-FROM film
-FULL JOIN inventory
-ON film.film_id = inventory.film_id
-FULL JOIN rental
-ON inventory.inventory_id = rental.inventory_id;
-
-
-
-
--- Basic Subquery
+-- 3. Show all customers names who have made payments over $175(use subqueries)
 SELECT *
+FROM customer;
+
+SELECT * 
+FROM payment;
+
+SELECT first_name, last_name, SUM(amount)
 FROM customer
-WHERE customer_id IN(
+JOIN payment ON customer.customer_id = payment.customer_id
+WHERE payment.customer_id IN(
 	SELECT customer_id
 	FROM payment
 	GROUP BY customer_id
-	HAVING SUM(amount) > 175
+	SUM(amount) > 175
 	ORDER BY SUM(amount) DESC
+)
+GROUP BY first_name, last_name;
+
+-- 4. List all customers that live in Nepal (use the city table)
+SELECT *
+FROM customer;
+
+SELECT *
+FROM address;
+
+SELECT *
+FROM city;
+
+SELECT *
+FROM country;
+
+SELECT customer_id, first_name, last_name, country
+FROM customer
+JOIN address ON customer.address_id = address.address_id
+JOIN city ON address.city_id = city.city_id
+JOIN country ON city.country_id = country.country_id
+WHERE country = 'Nepal';
+
+-- 5. Which staff member had the most transactions?
+SELECT *
+FROM payment;
+
+SELECT COUNT(payment_id)
+FROM payment;
+
+SELECT staff_id, COUNT(payment_id)
+FROM payment
+GROUP BY staff_id;
+
+SELECT staff_id, first_name, last_name
+FROM staff
+WHERE staff_id = staff ;
+
+-- 6. How many movies of each rating are there?
+SELECT *
+FROM film;
+
+SELECT DISTINCT rating
+FROM film;
+
+SELECT rating, COUNT(film_id)
+FROM film
+GROUP BY rating;
+SELECT COUNT(film_id)
+FROM film;
+
+-- 7.Show all customers who have made a single payment above $6.99 (Use Subqueries)
+SELECT first_name, last_name
+FROM customer
+WHERE customer_id IN (
+	SELECT customer_id
+	FROM payment
+	WHERE amount > 6.99
 );
 
--- Find all films with a language of 'English'
-SELECT *
-FROM film
-WHERE language_id IN (
-	SELECT language_id
-	FROM language
-	WHERE name = 'English'
+-- 8. How many free rentals did our store give away?
+SELECT * 
+FROM payment;
+
+SELECT COUNT(payment_id)
+FROM payment
+WHERE payment_id IN(
+	SELECT payment_id
+	FROM payment
+	WHERE amount = 0
 );
